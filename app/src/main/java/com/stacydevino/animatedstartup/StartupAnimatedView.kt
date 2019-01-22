@@ -6,8 +6,6 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
-import android.os.Handler
-import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
@@ -46,8 +44,8 @@ class StartupAnimatedView(context: Context) : BaseConstraintView(context) {
         //starts at scale 0.3
         val favoriteAnim = AnimatorSet()
 
-        val scaleDownX = ObjectAnimator.ofFloat(favoriteLogo, "scaleX", 0.0f)
-        val scaleDownY = ObjectAnimator.ofFloat(favoriteLogo, "scaleY", 0.0f)
+        val scaleDownX = ObjectAnimator.ofFloat(favoriteLogo, View.SCALE_X, 0.0f)
+        val scaleDownY = ObjectAnimator.ofFloat(favoriteLogo, View.SCALE_Y, 0.0f)
         scaleDownX.duration = favoriteAnimOutTime
         scaleDownY.duration = favoriteAnimOutTime
         scaleDownX.interpolator = DecelerateInterpolator(decelerateFactor)
@@ -76,8 +74,8 @@ class StartupAnimatedView(context: Context) : BaseConstraintView(context) {
         //starts at scale 25 for covering all screen sizes/types
         val androidAnimIn = AnimatorSet()
 
-        val scaleDownX = ObjectAnimator.ofFloat(androidLogo, "scaleX", 0.6f)
-        val scaleDownY = ObjectAnimator.ofFloat(androidLogo, "scaleY", 0.6f)
+        val scaleDownX = ObjectAnimator.ofFloat(androidLogo, View.SCALE_X, 0.6f)
+        val scaleDownY = ObjectAnimator.ofFloat(androidLogo, View.SCALE_Y, 0.6f)
         scaleDownX.duration = androidAnimInTime
         scaleDownY.duration = androidAnimInTime
         scaleDownX.interpolator = DecelerateInterpolator(decelerateFactorAndroid)
@@ -109,14 +107,14 @@ class StartupAnimatedView(context: Context) : BaseConstraintView(context) {
         //starts at scale 25 for covering all screen sizes/types
         val androidAnimOut = AnimatorSet()
 
-        val scaleDownX = ObjectAnimator.ofFloat(androidLogo, "scaleX", 0.0f)
-        val scaleDownY = ObjectAnimator.ofFloat(androidLogo, "scaleY", 0.0f)
+        val scaleDownX = ObjectAnimator.ofFloat(androidLogo, View.SCALE_X, 0.0f)
+        val scaleDownY = ObjectAnimator.ofFloat(androidLogo, View.SCALE_Y, 0.0f)
         scaleDownX.duration = androidAnimOutTime
         scaleDownY.duration = androidAnimOutTime
         scaleDownX.interpolator = AccelerateInterpolator(0.5f)
         scaleDownY.interpolator = AccelerateInterpolator(0.5f)
 
-        val fadeOut = ObjectAnimator.ofFloat(this, "alpha", 1f, 0.0f)
+        val fadeOut = ObjectAnimator.ofFloat(this, View.ALPHA, 1f, 0.0f)
         fadeOut.interpolator = AccelerateInterpolator()
         fadeOut.duration = androidAnimOutTime
 
