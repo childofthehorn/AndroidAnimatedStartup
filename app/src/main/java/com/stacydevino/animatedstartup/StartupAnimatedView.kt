@@ -1,15 +1,20 @@
 package com.stacydevino.animatedstartup
 
 import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
+import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
-import kotlinx.android.synthetic.main.view_startup_splash_animated.view.*
+import com.stacydevino.animatedstartup.AnimState.FINISHED
+import com.stacydevino.animatedstartup.AnimState.RUNNING
+import com.stacydevino.animatedstartup.AnimState.STARTED
+import com.stacydevino.animatedstartup.databinding.ViewStartupSplashAnimatedBinding
 
 class StartupAnimatedView(context: Context) : BaseConstraintView(context) {
 
@@ -23,16 +28,24 @@ class StartupAnimatedView(context: Context) : BaseConstraintView(context) {
     private val decelerateFactor = 2f
     private val decelerateFactorAndroid = 0.8f
 
+    private lateinit var binding : ViewStartupSplashAnimatedBinding
+    lateinit var animListener: StateListener
+
     init {
         init(context)
     }
 
     private fun init(context: Context) {
         this.fitsSystemWindows = true
-        View.inflate(context, R.layout.view_startup_splash_animated, this)
+        // Sadly cannot use a `lazy` declaration here
+        // or it will take a full second longer to inflate the view
+        binding = ViewStartupSplashAnimatedBinding.inflate(
+            LayoutInflater.from(context), this, true
+        )
     }
 
     fun runAnimation() {
+        animListener.onStateChanged(STARTED)
         //run the animations
         heartAnimation().start()
         androidAnimationIn().start()
@@ -44,24 +57,20 @@ class StartupAnimatedView(context: Context) : BaseConstraintView(context) {
         //starts at scale 0.3
         val favoriteAnim = AnimatorSet()
 
-        val scaleDownX = ObjectAnimator.ofFloat(favoriteLogo, View.SCALE_X, 0.0f)
-        val scaleDownY = ObjectAnimator.ofFloat(favoriteLogo, View.SCALE_Y, 0.0f)
+        val scaleDownX = ObjectAnimator.ofFloat(binding.favoriteLogo, View.SCALE_X, 0.0f)
+        val scaleDownY = ObjectAnimator.ofFloat(binding.favoriteLogo, View.SCALE_Y, 0.0f)
         scaleDownX.duration = favoriteAnimOutTime
         scaleDownY.duration = favoriteAnimOutTime
         scaleDownX.interpolator = DecelerateInterpolator(decelerateFactor)
         scaleDownY.interpolator = DecelerateInterpolator(decelerateFactor)
-        scaleDownX.addListener(object : Animator.AnimatorListener {
+        scaleDownX.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationStart(animation: Animator) {
-                constContainer.setBackgroundColor(Color.BLACK)
+                animListener.onStateChanged(RUNNING)
+                binding.constContainer.setBackgroundColor(Color.BLACK)
             }
-
             override fun onAnimationEnd(animation: Animator) {
-                favoriteLogo.visibility = View.GONE
+                binding.favoriteLogo.visibility = View.GONE
             }
-
-            override fun onAnimationCancel(animation: Animator) {}
-
-            override fun onAnimationRepeat(animation: Animator) {}
         })
         favoriteAnim.startDelay = favoriteStartTime
         favoriteAnim.playTogether(scaleDownX, scaleDownY)
@@ -74,26 +83,20 @@ class StartupAnimatedView(context: Context) : BaseConstraintView(context) {
         //starts at scale 25 for covering all screen sizes/types
         val androidAnimIn = AnimatorSet()
 
-        val scaleDownX = ObjectAnimator.ofFloat(androidLogo, View.SCALE_X, 0.6f)
-        val scaleDownY = ObjectAnimator.ofFloat(androidLogo, View.SCALE_Y, 0.6f)
+        val scaleDownX = ObjectAnimator.ofFloat(binding.androidLogo, View.SCALE_X, 0.6f)
+        val scaleDownY = ObjectAnimator.ofFloat(binding.androidLogo, View.SCALE_Y, 0.6f)
         scaleDownX.duration = androidAnimInTime
         scaleDownY.duration = androidAnimInTime
         scaleDownX.interpolator = DecelerateInterpolator(decelerateFactorAndroid)
         scaleDownY.interpolator = DecelerateInterpolator(decelerateFactorAndroid)
-        scaleDownX.addListener(object : Animator.AnimatorListener {
+        scaleDownX.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationStart(animation: Animator) {
-                constContainer.setBackgroundColor(Color.BLACK)
-                androidLogo.visibility = View.VISIBLE
+                binding.constContainer.setBackgroundColor(Color.BLACK)
+                binding.androidLogo.visibility = View.VISIBLE
             }
-
             override fun onAnimationEnd(animation: Animator) {
                 androidAnimationOut().start()
-
             }
-
-            override fun onAnimationCancel(animation: Animator) {}
-
-            override fun onAnimationRepeat(animation: Animator) {}
         })
 
         androidAnimIn.startDelay = androidStartInTime
@@ -107,8 +110,8 @@ class StartupAnimatedView(context: Context) : BaseConstraintView(context) {
         //starts at scale 25 for covering all screen sizes/types
         val androidAnimOut = AnimatorSet()
 
-        val scaleDownX = ObjectAnimator.ofFloat(androidLogo, View.SCALE_X, 0.0f)
-        val scaleDownY = ObjectAnimator.ofFloat(androidLogo, View.SCALE_Y, 0.0f)
+        val scaleDownX = ObjectAnimator.ofFloat(binding.androidLogo, View.SCALE_X, 0.0f)
+        val scaleDownY = ObjectAnimator.ofFloat(binding.androidLogo, View.SCALE_Y, 0.0f)
         scaleDownX.duration = androidAnimOutTime
         scaleDownY.duration = androidAnimOutTime
         scaleDownX.interpolator = AccelerateInterpolator(0.5f)
@@ -118,24 +121,16 @@ class StartupAnimatedView(context: Context) : BaseConstraintView(context) {
         fadeOut.interpolator = AccelerateInterpolator()
         fadeOut.duration = androidAnimOutTime
 
-        scaleDownX.addListener(object : Animator.AnimatorListener {
-            override fun onAnimationStart(animation: Animator) {}
-
+        scaleDownX.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
                 visibility = View.GONE
-                (context as MostlyEmptyActivity).removeSplash()
+                animListener.onStateChanged(FINISHED)
             }
-
-            override fun onAnimationCancel(animation: Animator) {}
-
-            override fun onAnimationRepeat(animation: Animator) {}
         })
 
         androidAnimOut.playTogether(scaleDownX, scaleDownY, fadeOut)
 
         return androidAnimOut
     }
-
-
 }
 

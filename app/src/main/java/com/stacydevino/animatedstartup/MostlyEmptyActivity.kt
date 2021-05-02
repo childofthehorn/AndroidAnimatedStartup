@@ -2,14 +2,17 @@ package com.stacydevino.animatedstartup
 
 import android.graphics.Color
 import android.graphics.PixelFormat
-import android.os.Build
-import android.support.v7.app.AppCompatActivity
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
+import android.view.WindowInsets.Type.systemBars
 import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
 
-class MostlyEmptyActivity : AppCompatActivity() {
+class MostlyEmptyActivity : AppCompatActivity(), StateListener {
 
     var splashAnimRun = false
     lateinit var splashAnimation : StartupAnimatedView
@@ -17,11 +20,10 @@ class MostlyEmptyActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        animationTimeHandler = Handler()
+        animationTimeHandler = Handler(Looper.getMainLooper())
         runSplashAnimation()
         setContentView(R.layout.activity_mostly_empty)
     }
-
 
     fun runSplashAnimation() {
         val windowManager = windowManager
@@ -33,6 +35,7 @@ class MostlyEmptyActivity : AppCompatActivity() {
             runOnUiThread {
                 splashAnimRun = true
                 splashAnimation = StartupAnimatedView(this)
+                splashAnimation.animListener = this
                 window.setFlags(
                         WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
                         WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED)
@@ -40,12 +43,17 @@ class MostlyEmptyActivity : AppCompatActivity() {
                 wlp.gravity = Gravity.CENTER
                 wlp.height = WindowManager.LayoutParams.MATCH_PARENT
                 wlp.width = WindowManager.LayoutParams.MATCH_PARENT
-                wlp.flags = WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN
+                wlp.flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                 wlp.format = PixelFormat.TRANSLUCENT
-                windowManager.addView(splashAnimation, wlp)
-                if (Build.VERSION.SDK_INT >= 22) { // LOLLIPOP MR
-                    window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_ATTACHED_IN_DECOR)
+
+                // Our animation is USING the system bars to an advantage here,
+                // but may not in all animations (esp. coloring / fullscreen apps)
+                if (VERSION.SDK_INT >= VERSION_CODES.R) {
+                    wlp.setFitInsetsTypes(systemBars())
+                } else {
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_ATTACHED_IN_DECOR)
                 }
+                windowManager.addView(splashAnimation, wlp)
                 //We have to put a 1000ms delay because the view at startup takes appx. 1 second to load from this point on most devices.
                 animationTimeHandler.postDelayed(splashAnimationStartRunnable, 1000)
             }
@@ -60,6 +68,12 @@ class MostlyEmptyActivity : AppCompatActivity() {
         override fun run() {
             splashAnimation.runAnimation()
             animationTimeHandler.removeCallbacks(this)
+        }
+    }
+
+    override fun onStateChanged(state: AnimState) {
+        if(state == AnimState.FINISHED){
+            removeSplash()
         }
     }
 }

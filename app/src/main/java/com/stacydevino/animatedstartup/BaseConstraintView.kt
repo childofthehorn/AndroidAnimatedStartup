@@ -1,8 +1,8 @@
 package com.stacydevino.animatedstartup
 
 import android.content.Context
-import android.support.constraint.ConstraintLayout
 import android.util.AttributeSet
+import androidx.constraintlayout.widget.ConstraintLayout
 
 open class BaseConstraintView : ConstraintLayout {
     constructor(context: Context) : super(context) {}
